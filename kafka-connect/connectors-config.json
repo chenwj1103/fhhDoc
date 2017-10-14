@@ -1,0 +1,472 @@
+[
+    {
+      "name": "fhh_sink_fhh_id_map_account",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.FhhAccountRedisSinkConnector",
+        "topics": "fhh_stream_distribute_account",
+        "tasks.max": "1",
+        "redis.mode": "cluster",
+        "redis.cluster.hosts": "10.90.13.156:7000,10.90.13.154:7000,10.90.13.155:7000,10.90.13.153:7000"
+      }
+    },
+    {
+      "name": "fhh_sink_fhh_id_map_article",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.FhhArticleRedisSinkConnector",
+        "topics": "fhh_stream_distribute_article",
+        "tasks.max": "1",
+        "redis.mode": "cluster",
+        "redis.cluster.hosts": "10.90.13.156:7000,10.90.13.154:7000,10.90.13.155:7000,10.90.13.153:7000"
+      }
+    },
+    {
+      "name": "fhh_sink_fhh_id_map_video",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.FhhVideoRedisSinkConnector",
+        "topics": "fhh_stream_distribute_video",
+        "tasks.max": "1",
+        "redis.mode": "cluster",
+        "redis.cluster.hosts": "10.90.13.156:7000,10.90.13.154:7000,10.90.13.155:7000,10.90.13.153:7000"
+      }
+    },
+    {
+      "name": "fhh_sink_cache_data_quota",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.StatisticsQuotaRedisConnector",
+        "topics": "fhh_stream_data_quota",
+        "tasks.max": "1",
+        "redis.mode": "cluster",
+        "redis.cluster.hosts": "10.90.13.156:7000,10.90.13.154:7000,10.90.13.155:7000,10.90.13.153:7000"
+      }
+    },
+    {
+      "name": "fhh_sink_cache_account",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.AccountCacheSinkConnector",
+        "topics": "fhh_stream_distribute_account,fhh_stream_distribute_article,fhh_stream_distribute_video",
+        "tasks.max": "1",
+        "httpSink.url": "http://local.fhhapi-service.ifengidc.com/account/cache/build",
+        "httpClient.request.method": "GET"
+      }
+    },
+    {
+      "name": "fhh_sink_cache_account_article",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.AccountArticleCacheSinkConnector",
+        "topics": "fhh_stream_distribute_article",
+        "tasks.max": "1",
+        "redis.mode": "cluster",
+        "redis.cluster.hosts": "10.90.13.156:7000,10.90.13.154:7000,10.90.13.155:7000,10.90.13.153:7000"
+      }
+    },
+    {
+      "name": "fhh_sink_cache_account_video",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.AccountVideoCacheSinkConnector",
+        "topics": "fhh_stream_distribute_video",
+        "tasks.max": "1",
+        "redis.mode": "cluster",
+        "redis.cluster.hosts": "10.90.13.156:7000,10.90.13.154:7000,10.90.13.155:7000,10.90.13.153:7000"
+      }
+    },
+    {
+      "name": "fhh_sink_searchEngine_data",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.SearchEngineSyncSinkConnector",
+        "httpClient.request.method": "GET",
+        "topics": "fhh_stream_searchEngine_data",
+        "tasks.max": "5",
+        "httpSink.url": "http://local.fhhapi-service.ifengidc.com/searchEngine/data/sync"
+      }
+    },
+    {
+      "name": "fhh_sink_yidian_data",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.YidianzixunDataSinkConnector",
+        "topics": "fhh_stream_yidianzixun_data",
+        "tasks.max": "1",
+        "httpClient.request.contentType": "text/plain",
+        "httpSink.url": "http://local.fhhapi-service.ifengidc.com/onePoint/data"
+      }
+    },
+    {
+      "name": "fhh_sink_localization_data",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.LocalizationCallBackSinkConnector",
+        "topics": "fhh_stream_localization_data",
+        "tasks.max": "1",
+        "httpSink.url": "http://local.fhhapi-service.ifengidc.com/localization/callback"
+      }
+    },
+    {
+      "name": "fhh_sink_spider_article",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.SpiderArticleSinkConnector",
+        "topics": "fhh_stream_spider_article",
+        "tasks.max": "1",
+        "httpClient.request.contentType": "text/plain",
+        "httpSink.url": "http://local.fhhapi-service.ifengidc.com/spider/article/import"
+      }
+    },
+    {
+      "name": "fhh_sink_video_transcode",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.VideoTranscodeSinkConnector",
+        "topics": "fhh_stream_video_transcode",
+        "tasks.max": "1",
+        "videoCallbackUrl": "http://local.fhhapi.ifeng.com/video/transCode/callback",
+        "articleCallbackUrl": "http://local.fhhapi.ifeng.com/article/transCode/callback"
+      }
+    },
+    {
+      "name": "fhh_sink_spider_video",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.SpiderVideoSinkConnector",
+        "topics": "fhh_stream_spider_video",
+        "tasks.max": "1",
+        "httpSink.url": "http://local.innerapi.fhh.ifengidc.com/support/spider/addVideo"
+      }
+    },
+    {
+      "name": "fhh_sink_cmpp_article",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.CMPPArticleReceiveSinkConnector",
+        "topics": "fhh_stream_cmpp_article",
+        "tasks.max": "1",
+        "httpSink.url": "http://local.innerapi.fhh.ifengidc.com/wapi/article/cmppinsert"
+      }
+    },
+    {
+      "name": "fhh_sink_cmpp_video",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.CMPP2FhhVideoSinkConnector",
+        "topics": "fhh_stream_cmpp_video",
+        "tasks.max": "1",
+        "httpSink.url": "http://local.innerapi.fhh.ifengidc.com/support/cmpp/addVideo"
+      }
+    },
+    {
+      "name": "fhh_sink_cmpp_distribute_audited_spider_article",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.CMPPSpiderArticleConnector",
+        "topics": "fhh_stream_distribute_article",
+        "tasks.max": "1",
+        "httpSink.url": "http://auto.cmpp.ifeng.com/Cmpp/runtime/interface_182.jhtml"
+      }
+    },
+    {
+      "name": "fhh_sink_cmpp_distribute_audited_spider_video1",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.CMPPVideoSinkConnector",
+        "topics": "fhh_stream_distribute_video",
+        "tasks.max": "1",
+        "httpSink.url": "http://v.cmpp.ifeng.com/Cmpp/runtime/interface_515.jhtml"
+      }
+    },
+    {
+      "name": "fhh_sink_yidian_account_status",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.YidianzixunAccountStatusSinkConnector",
+        "topics": "fhh_stream_yidianzixun_account_status",
+        "tasks.max": "1",
+        "httpSink.url": "http://local.innerapi.fhh.ifengidc.com/support/onePoint/status"
+      }
+    },
+    {
+      "name": "fhh_sink_yidian_article_status",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.YidianzixunArticleStatusSinkConnector",
+        "topics": "fhh_stream_yidianzixun_article_status",
+        "tasks.max": "1",
+        "httpClient.request.contentType": "text/plain",
+        "httpSink.url": "http://local.fhhapi-service.ifengidc.com/onePoint/data/status"
+      }
+    },
+    {
+      "name": "fhh_sink_autochannel_account",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.AutoChannelAccountStatSinkConnector",
+        "topics": "fhh_stream_distribute_account",
+        "tasks.max": "1",
+        "httpSink.url": "http://api.auto.ifeng.com/wemedia/api/user"
+      }
+    },
+    {
+      "name": "fhh_sink_autochannel_article",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.AutoChannelArticleStatSinkConnector",
+        "topics": "fhh_stream_distribute_article",
+        "tasks.max": "1",
+        "httpSink.url": "http://api.auto.ifeng.com/wemedia/api/article"
+      }
+    },
+    {
+      "name": "fhh_sink_yidian_distribute_account_status",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.Fhh2YidianAccountStatusSinkConnector",
+        "topics": "fhh_stream_distribute_account",
+        "tasks.max": "1",
+        "httpClient.socketTimeout": "10000",
+        "httpClient.connectTimeout": "10000",
+        "httpClient.connectionRequestTimeout": "10000",
+        "httpClient.request.method": "GET"
+      }
+    },
+    {
+      "name": "fhh_sink_yidian_distribute_article_status",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.Fhh2YidianArticleStatusSinkConnector",
+        "topics": "fhh_stream_distribute_article",
+        "tasks.max": "1",
+        "httpClient.socketTimeout": "10000",
+        "httpClient.connectTimeout": "10000",
+        "httpClient.connectionRequestTimeout": "10000",
+        "httpClient.request.method": "GET"
+      }
+    },
+    {
+      "name": "fhh_sink_yidian_distribute_data",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.Fhh2YidianDataSinkConnector",
+        "topics": "fhh_stream_distribute_article,fhh_stream_distribute_video",
+        "tasks.max": "1",
+        "httpClient.request.contentType": "text/plain",
+        "httpClient.socketTimeout": "10000",
+        "httpClient.connectTimeout": "10000",
+        "httpClient.connectionRequestTimeout": "10000",
+        "httpSink.url": "http://ifeng_guard.go2yd.com/ifeng/post/add"
+      }
+    },
+    {
+      "name": "fhh_sink_cmpp_distribute_audited_hand_article",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.CMPPArticleSinkConnector",
+        "topics": "fhh_stream_distribute_article",
+        "tasks.max": "1"
+      }
+    },
+    {
+      "name": "fhh_sink_sub_collect_account_latest_article",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.SubCollectLatestDataSinkConnector",
+        "topics": "fhh_stream_distribute_account,fhh_stream_distribute_article,fhh_stream_distribute_video",
+        "tasks.max": "1",
+        "httpSink.url": "http://local.fhhapi-service.ifengidc.com/account/client/push",
+        "httpClient.request.method": "GET"
+      }
+    },
+    {
+      "name": "fhh_sink_sub_collect_article",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.SubCollectDataSinkConnector",
+        "topics": "fhh_stream_distribute_article,fhh_stream_distribute_video",
+        "tasks.max": "1",
+        "httpSink.url": "http://local.fhhapi-service.ifengidc.com/content/client",
+        "httpClient.socketTimeout": "3000",
+        "httpClient.connectTimeout": "3000",
+        "httpClient.connectionRequestTimeout": "3000"
+      }
+    },
+    {
+      "name": "fhh_sink_vampire_account",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.VampireAccountSinkConnector",
+        "topics": "fhh_stream_distribute_account",
+        "tasks.max": "1",
+        "mongodb.driver": "mongodb://10.50.3.91:2701,10.90.2.81:2701,10.90.2.82:2701",
+        "mongodb.db": "vampire"
+      }
+    },
+    {
+      "name": "fhh_sink_vampire_article",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.VampireArticleSinkConnector",
+        "topics": "fhh_stream_distribute_article",
+        "tasks.max": "1",
+        "mongodb.driver": "mongodb://10.50.3.91:2701,10.90.2.81:2701,10.90.2.82:2701",
+        "mongodb.db": "vampire"
+      }
+    },
+    {
+      "name": "fhh_sink_realestatechannel_article",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.RealEstateChannelArticleConnector",
+        "topics": "fhh_stream_distribute_article",
+        "tasks.max": "1",
+        "httpSink.url": "http://house.ifeng.com/zmt/zmtapi/article"
+      }
+    },
+    {
+      "name": "fhh_sink_realestatechannel_account",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.RealEstateChannelAccountConnector",
+        "topics": "fhh_stream_distribute_account",
+        "tasks.max": "1",
+        "httpSink.url": "http://house.ifeng.com/zmt/zmtapi/cate"
+      }
+    },
+    {
+      "name": "fhh_sink_article_content_clean",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.ArticleContentCleanSinkConnector",
+        "topics": "fhh_stream_clear_result",
+        "tasks.max": "1",
+        "httpSink.url": "http://local.fhhapi-service.ifengidc.com/clean/callback"
+      }
+    },
+    {
+      "name": "fhh_sink_hawkeye_publish",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.HawkeyePublishConnector",
+        "httpClient.request.method": "GET",
+        "topics": "fhh_stream_distribute_article,fhh_stream_distribute_video",
+        "tasks.max": "1",
+        "httpSink.url": "http://local.fhhapi-service.ifengidc.com/hawkeye/cache/publish"
+      }
+    },
+    {
+      "name": "fhh_sink_pgc_statistic_id_map",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.PgcStatisticIdSinkConnector",
+        "httpClient.request.method": "GET",
+        "topics": "fhh_stream_distribute_article,fhh_stream_distribute_video",
+        "tasks.max": "1",
+        "httpSink.url": "http://local.pgcstat.ifengidc.com/pgc/add.do"
+      }
+    },
+    {
+      "name": "fhh_sink_cmpp_offline_video",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.CmppOfflineVideoSinkConnector",
+        "topics": "fhh_stream_distribute_video",
+        "tasks.max": "1",
+        "httpSink.url": "http://v.cmpp.ifeng.com/Cmpp/runtime/interface_20593.jhtml",
+        "httpClient.request.method": "GET"
+      }
+    },
+    {
+      "name": "fhh_sink_cmpp_offline_article",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.CMPPOfflineArticleSinkConnector",
+        "topics": "fhh_stream_distribute_article",
+        "tasks.max": "1",
+        "httpSink.url": "http://g.cmpp.ifeng.com/Cmpp/runtime/interface_484.jhtml",
+        "httpClient.request.method": "GET"
+      }
+    },
+    {
+      "name": "fhh_sink_video_offline_not_recommend",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.VideoNotRecommendConnector",
+        "httpClient.request.method": "GET",
+        "topics": "fhh_stream_distribute_video",
+        "tasks.max": "1",
+        "httpSink.url": "http://nyx.staff.ifeng.com/project/api/recommendMgr/offlineFromFhh"
+      }
+    },
+    {
+      "name": "fhh_sink_integral_grade",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.IntegralGradeConnector",
+        "httpClient.request.method": "GET",
+        "topics": "fhh_stream_distribute_account,fhh_stream_distribute_article,fhh_stream_distribute_video",
+        "tasks.max": "1",
+        "httpSink.url": "http://local.fhhapi-service.ifengidc.com/integral/grade"
+      }
+    },
+    {
+      "name": "fhh_sink_account_searchEngine_queue",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.AccountSearchEngineQueueSinkConnector",
+        "topics": "fhh_stream_distribute_account",
+        "tasks.max": "1",
+        "httpSink.url": "http://local.fhhapi-service.ifengidc.com/searchEngine/data/queue",
+        "httpClient.request.method": "GET"
+      }
+    },
+    {
+      "name": "fhh_sink_carchannel_article_status",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.CarChannelArticleStatusSinkConnector",
+        "topics": "fhh_stream_carchannel_article_status",
+        "tasks.max": "1",
+        "httpClient.request.contentType": "text/plain",
+        "httpSink.url": "http://local.fhhapi-service.ifengidc.com/carChannel/article/status"
+      }
+    },
+    {
+      "name": "fhh_sink_carchannel_article",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.CarChannelArticleSinkConnector",
+        "topics": "fhh_stream_carchannel_article",
+        "tasks.max": "1",
+        "httpClient.request.contentType": "text/plain",
+        "httpSink.url": "http://local.fhhapi-service.ifengidc.com/carChannel/article"
+      }
+    },
+    {
+      "name": "fhh_sink_irecommendation",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.IRecommendationSinkConnector",
+        "topics": "fhh_stream_irecommendation",
+        "tasks.max": "1"
+      }
+    },
+    {
+      "name": "fhh_stream_instruction_offline",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.InstructionOfflineSinkConnector",
+        "topics": "fhh_stream_instruction_offline",
+        "tasks.max": "3"
+      }
+    },
+    {
+      "name": "fhh_sink_articleContent_searchEngine_queue",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.ArticleContentSearchEngineQueueSinkConnector",
+        "topics": "fhh_stream_distribute_article",
+        "tasks.max": "1",
+        "httpSink.url": "http://local.fhhapi-service.ifengidc.com/searchEngine/data/queue",
+        "httpClient.request.method": "GET"
+      }
+    },
+    {
+      "name": "fhh_sink_chuban_similar_article",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.ChuBanSimilarArticleSinkConnector",
+        "topics": "fhh_stream_chuban_similar_article",
+        "tasks.max": "1",
+        "httpClient.request.contentType": "text/plain",
+        "httpSink.url": "http://local.fhhapi-service.ifengidc.com/chuban/similar/article"
+      }
+    },
+    {
+      "name": "fhh_sink_chuban_rights_status",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.ChuBanRightsBackSinkConnector",
+        "topics": "fhh_stream_chuban_rights_status",
+        "tasks.max": "1",
+        "httpClient.request.contentType": "text/plain",
+        "httpSink.url": "http://local.fhhapi-service.ifengidc.com/chuban/rights/status"
+      }
+    },
+    {
+      "name": "fhh_sink_article_certificate",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.ArticleCertificateSinkConnector",
+        "topics": "fhh_stream_distribute_article",
+        "tasks.max": "1",
+        "httpClient.request.method": "GET",
+        "httpSink.url": "http://local.fhhapi-service.ifengidc.com/chuban/creation/certificate"
+      }
+    },
+    {
+      "name": "fhh_sink_quick_article",
+      "config": {
+        "connector.class": "com.ifeng.fhh.stream.message.kafka.connect.connector.QuickArticleSinkConnector",
+        "topics": "fhh_stream_quick_article",
+        "tasks.max": "1",
+        "httpSink.url": "http://local.fhhapi-service.ifengidc.com/quick/article/import"
+      }
+    }
+]

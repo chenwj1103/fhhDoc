@@ -1,0 +1,46 @@
+Hyperloglog
+
+1. PFADD key element [element ...]
+	将指定的元素添加到Hyperloglog结构中，如果在添加元素的过程中他的基数发生了变化，则返回1.否则返回0
+
+	返回值：
+	如果内部被修改了则返回1 否则返回0
+
+	例子：
+	127.0.0.1:6379> pfadd pllkey 0 1 2 3 4 5 6 
+	(integer) 1
+	127.0.0.1:6379> pfcount pllkey
+	(integer) 7
+
+2. PFCOUNT key [key ...]
+	当key为一个时，返回该结构中变量的近似基数。如果不存在，则返回0
+	如果存在多个key时，将这些key对应的Hyperloglog 合并到一个临时的Hyperloglog结构中然后计算出基数
+
+	返回值：
+	返回近似基数
+
+	例子：
+	127.0.0.1:6379> pfadd pllkey 0 1 2 3 4 5 6 
+	(integer) 1 
+	127.0.0.1:6379> pfcount pllkey
+	(integer) 7
+	127.0.0.1:6379> pfadd pllkey 2 3 4 5
+	(integer) 0
+	127.0.0.1:6379> pfcount pllkey
+	(integer) 7
+
+3. 	PFMERGE destkey sourcekey [sourcekey ...]
+	将多个 HyperLogLog 集合合并为一个HyperLogLog 集合。
+
+	返回值：
+	返回ok
+
+	例子：
+	127.0.0.1:6379> pfcount pllkey
+	(integer) 8
+	127.0.0.1:6379> pfadd pllkey2 1 4 8 9 0
+	(integer) 1
+	127.0.0.1:6379> pfmerge deskeypll pllkey pllkey2 
+	OK
+	127.0.0.1:6379> pfcount deskeypll
+	(integer) 10

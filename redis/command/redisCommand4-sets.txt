@@ -1,0 +1,262 @@
+Sets(value的本质是字符串 size： 2的32次方 - 1 )
+
+1. SADD key member [member ...]
+	添加指定的元素到set集合中，如果某个元素在集合中已经存在，则该元素被忽略。如果key不存在，则先创建一个set集合，再添加进去；如果key的value不是set集合类型，则返回error
+
+	返回值：
+	返回被添加到集合中的元素的个数，不包括已经在集合中存在的元素。如果key对应的value不是set集合，则返回error
+
+	例子：
+	127.0.0.1:6379> smembers setkey
+	1) "1"
+	2) "2"
+	3) "3"
+	4) "4"
+	127.0.0.1:6379> sadd setkey 2 3 4 5
+	(integer) 1
+	127.0.0.1:6379> smembers setkey
+	1) "1"
+	2) "2"
+	3) "3"
+	4) "4"
+	5) "5"
+
+	127.0.0.1:6379> exists setkey2
+	(integer) 0
+	127.0.0.1:6379> sadd setkey2 2 3
+	(integer) 2
+	127.0.0.1:6379> type listkey
+	list
+	127.0.0.1:6379> sadd listkey 1 2 3
+	(error) WRONGTYPE Operation against a key holding the wrong kind of value
+
+2. SCARD key
+	获取key对应的set集合的元素的个数
+
+	返回：
+	返回集合中元素的个数，如果key不存在，则返回0
+
+	例子：
+	127.0.0.1:6379> smembers setkey
+	1) "1"
+	2) "2"
+	3) "3"
+	4) "4"
+	5) "5"
+	127.0.0.1:6379> scard setkey
+	(integer) 5
+	127.0.0.1:6379> del setkey
+	(integer) 1
+	127.0.0.1:6379> scard setkey
+	(integer) 0
+
+3. 	SDIFF key [key ...]
+	返回第一个集合和给定其它集合的差集，不存的key相当于空集合
+
+	返回值：
+	返回差集的集合
+
+	例子：
+	127.0.0.1:6379> smembers setkey
+	1) "1"
+	2) "2"
+	3) "3"
+	127.0.0.1:6379> smembers setkey1
+	(empty list or set)
+	127.0.0.1:6379> smembers setkey2
+	1) "2"
+	2) "3"
+	3) "4"
+
+4. SDIFFSOTRE destination key [key ...]
+	该命令和SDIFF命令几乎相同，不同点是将结果存在destination集合中
+
+	返回值 ：
+	返回结果的个数
+
+	例子：
+	127.0.0.1:6379> sdiffstore deskey setkey setkey1 setkey2
+	(integer) 1
+	127.0.0.1:6379> smembers deskey
+	1) "1"
+
+5. SINTER key [key ...]
+	获取给定集合的交集 ，key不存在视为空集合
+
+	返回值：
+	返回给定集合的交集
+
+	例子：
+	127.0.0.1:6379> smembers setkey
+	1) "1"
+	2) "2"
+	3) "3"
+	127.0.0.1:6379> smembers setkey2
+	1) "2"
+	2) "3"
+	3) "4"
+	127.0.0.1:6379> sinter setkey setkey2
+	1) "2"
+	2) "3"
+
+6. SINTERSTORE destination key [key ...]
+	获取给定集合的交集存到destination集合中
+
+	返回值：
+	返回交集集合的个数
+
+	例子：
+	127.0.0.1:6379> sinterstore deskey setkey setkey2
+	(integer) 2
+	127.0.0.1:6379> smembers deskey
+	1) "2"
+	2) "3"
+
+7. SISMEMBER key member
+	判断给定的member是否属于key的集合
+
+	返回值：
+	1代表属于
+	0代表不属于
+
+	例子：
+	127.0.0.1:6379> smembers setkey
+	1) "1"
+	2) "2"
+	3) "3"
+	127.0.0.1:6379> sismember setkey 0
+	(integer) 0
+	127.0.0.1:6379> sismember setkey 1
+	(integer) 1
+
+8. SMEMBERS key
+	获取key对应集合的元素
+
+	返回值	
+	返回对应集合的元素
+
+	例子：
+	127.0.0.1:6379> smembers setkey
+	1) "1"
+	2) "2"
+	3) "3"
+
+9. SMOVE source destination member
+	将member元素从source中移除，并放到destination集合中；该操作是原子操作，如果source集合不存在或者不存在给定的member，则不会执行操作，返回0，否则将执行操作从source中移除该元素，并放到destination中。如果该元素在destination中存在，则只移除source中的元素。如果source或者destination不是set集合，则返回error
+
+	返回值：
+	如果执行了操作返回1
+	如果给定元素在source中不存在或者操作没执行，则返回0
+
+	例子：
+	127.0.0.1:6379> smembers setkey
+	1) "1"
+	2) "2"
+	3) "3"
+	127.0.0.1:6379> smembers setkey2
+	1) "2"
+	2) "3"
+	3) "4"
+	127.0.0.1:6379> smove setkey setkey2 1
+	(integer) 1
+	127.0.0.1:6379> smembers setkey
+	1) "2"
+	2) "3"
+	127.0.0.1:6379> smembers setkey2
+	1) "1"
+	2) "2"
+	3) "3"
+	4) "4"
+
+10. SPOP key [count]
+	随机从key对应的set集合中移除count个元素
+
+	返回值：
+	移除的元素 如果key不存在，则返回nil
+
+	例子：
+	127.0.0.1:6379> smembers setkey2
+	1) "1"
+	2) "2"
+	3) "3"
+	4) "4"
+	127.0.0.1:6379> spop setkey2 3
+	1) "3"
+	2) "2"
+	3) "1"
+	127.0.0.1:6379> smembers setkey2
+	1) "4"
+
+11. SRANDMEMBER key [count]
+	随机返回key集合中的count个元素，如果count是正数且小于集合中元素个数，则返回count个元素；如果count是整数且大于集合中元素个数，则返回所有集合中的元素；如果count是负数且绝对值小于集合中的个数，则返回count个元素，如果count是负数且绝对值大于集合中的元素个数，则结果集中出现一个元素出现多次的情况。不同于pop的是不会移除原来集合中的元素。
+
+	返回值：
+	返回随机返回的元素
+
+	例子：
+	127.0.0.1:6379> smembers deskey
+	1) "2"
+	2) "3"
+	3) "4"
+	4) "5"
+	5) "6"
+	6) "7"
+	7) "8"
+	127.0.0.1:6379> srandmember deskey 3
+	1) "3"
+	2) "6"
+	3) "5"
+
+12. SREM key member [member ...]
+	移除key集合中的指定元素 如果指定元素不是key集合中的则忽略，如果key不存在，则被当做空集合处理，返回0
+
+	返回值：
+	返回被移除的元素，不包括在key集合中不存在的元素
+
+	例子：
+	127.0.0.1:6379> smembers deskey
+	1) "2"
+	2) "4"
+	3) "6"
+	4) "8"
+	127.0.0.1:6379> srem deskey 3 4 6
+	(integer) 2
+	127.0.0.1:6379> smembers deskey
+	1) "2"
+	2) "8"
+
+13. SCAN cursor [MATCH pattern] [COUNT count]
+	迭代set集合中的元素 
+
+
+14. SUNION key [key ...]
+	获取给定key集合的并集
+
+	返回值：
+	并集所组成的集合
+
+	例子：
+	127.0.0.1:6379> smembers deskey
+	1) "2"
+	2) "8"
+	127.0.0.1:6379> smembers setkey
+	1) "2"
+	2) "3"
+	127.0.0.1:6379> sunion deskey setkey
+	1) "2"
+	2) "3"
+	3) "8"
+
+15. SUNIONSTORE destination key [key ...]
+	等同于SUNION，不过返回的集合要存储在destination集合中	
+
+	返回值：
+	destination集合中元素的个数
+
+	例子：
+	127.0.0.1:6379> sunionstore dkey deskey setkey
+	(integer) 3
+	127.0.0.1:6379> smembers dkey
+	1) "2"
+	2) "3"
+	3) "8"

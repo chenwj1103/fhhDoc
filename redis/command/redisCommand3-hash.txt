@@ -1,0 +1,247 @@
+Hash (size:2的23次方-1的filed-value对,filed和value都是String)
+
+1.  HDEL key filed [filed ...]
+	移除hash集合中的fileds字段，如果filed不存在，则忽略；如果指定的key不存在，则返回0
+
+	返回值：
+	返回从key对应的hash中删除的字段的个数，不包括被忽略的字段。如果key不存在，则返回0
+
+	例子：
+	127.0.0.1:6379> hgetall hashkey
+	1) "name"
+	2) "chen"
+	3) "age"
+	4) "10"
+	127.0.0.1:6379> hdel hashkey name
+	(integer) 1
+	127.0.0.1:6379> hgetall hashkey
+	1) "age"
+	2) "10"
+	127.0.0.1:6379> hdel hashkey wang
+	(integer) 0
+
+2. HEXISTS key filed 
+	hash中是否存在filed字段，如果存在，则返回1.不存在则返回0
+
+	返回值：
+	存在返回1 ，不存在返回0
+
+	例子：
+	127.0.0.1:6379> hgetall hashkey
+	1) "age"
+	2) "10"
+	127.0.0.1:6379> hexists hashkey name
+	(integer) 0
+	127.0.0.1:6379> hexists hashkey age
+	(integer) 1
+
+3. HGET key field
+	获取存储在key中的hash的filed字段
+
+	返回值：
+	返回field字段的value，如果filed字段不存在，则返回nil
+
+	例子：
+	127.0.0.1:6379> hgetall hashkey
+	1) "age"
+	2) "10"
+	3) "name"
+	4) "chenweijie"
+	127.0.0.1:6379> hget hashkey age
+	"10"
+
+4.  HGETALL key
+	获取key对应的hash中的所有filed和value
+
+	返回值：
+	返回filed和value的键值对。
+
+	例子：
+	127.0.0.1:6379> hgetall hashkey
+	1) "age"
+	2) "10"
+	3) "name"
+	4) "chenweijie"
+
+5. 	HINCRBY key filed increment
+	对key对应的hash中filed字段做增加操作，如果filed字段不存在，则初始化为0，做此操作。如果key不存在，则新建hash 执行此操作。此长度支持filed的带符号的64位
+
+	返回值：
+	返回执行操作后的值
+
+	例子：
+	127.0.0.1:6379> hget hashkey age
+	"10"
+	127.0.0.1:6379> hincrby hashkey age 10
+	(integer) 20
+
+
+6. 	HINCRBYFLOAT key field increment
+	对key中hash中的filed字段做increment操作，返回值是float类型的。如果filed对应的value不能解析为float或者不是字符串，则返回error
+
+	返回值：
+	返回执行increment操作后的float值
+
+	例子：
+	127.0.0.1:6379> hgetall hashkey
+	1) "age"
+	2) "20"
+	3) "name"
+	4) "chenweijie"
+	127.0.0.1:6379> hincrbyfloat hashkey age 10
+	"30"
+	127.0.0.1:6379> hincrbyfloat hashkey age 10.4
+	"40.4"
+
+7. HKEYS key
+	获取存储在key中的hash的所有filed的name
+
+	返回值：
+	返回hash中filed的name
+
+	例子：
+	127.0.0.1:6379> hkeys hashkey
+	1) "age"
+	2) "name"
+
+8. HLEN key 
+	获取存储在key中hash的filed个数
+
+	返回值：
+	返回hash中filed的个数
+
+	例子：
+	127.0.0.1:6379> hkeys hashkey
+	1) "age"
+	2) "name"
+	127.0.0.1:6379> hlen hashkey
+	(integer) 2
+
+9. 	HMGET key field [field ...]
+	获取key中hash的fileds字段的value
+
+	返回值：
+	返回filed字段的value，如果key或者filed不存在，则返回nil
+
+	例子：
+	127.0.0.1:6379> hgetall hashkey
+	1) "age"
+	2) "40.4"
+	3) "name"
+	4) "chenweijie"
+	127.0.0.1:6379> hmget hashkey name city
+	1) "chenweijie"
+	2) (nil)
+
+10. HMSET key filed value [filed value ...]
+	在hash中设置field和value键值对
+
+	返回值：
+	ok
+
+	例子：
+	127.0.0.1:6379> hexists hashkey *
+	(integer) 0
+	127.0.0.1:6379> hmset hashkey name chenweijie age 27
+	OK
+	127.0.0.1:6379> hgetall hashkey
+	1) "name"
+	2) "chenweijie"
+	3) "age"
+	4) "27"
+
+11.	HSCAN key cursor [MATCH pattern] [COUNT count]
+
+12. HSET key field value
+	设置key中hash的filed字段为value，如果不存在hash或者filed 将创建hash和覆盖key
+
+	返回值：
+	如果一个新值被设置了则返回1，如果filed存在hash中被更新了则返回0
+
+	例子：
+	127.0.0.1:6379> hgetall hashkey
+	1) "name"
+	2) "chenweijie"
+	3) "age"
+	4) "27"
+	127.0.0.1:6379> hset hashkey name zhuning
+	(integer) 0
+	127.0.0.1:6379> hgetall hashkey
+	1) "name"
+	2) "zhuning"
+	3) "age"
+	4) "27"
+
+13. HSETNX key field value
+	如果filed在hash中不存在，插入到hash中；如果filed存在，则不执行任何操作
+
+	返回值：
+	如果一个新的filed被设置，则返回1；如果没有执行任何操作，则返回0	
+
+	例子：
+	127.0.0.1:6379> hgetall hashkey
+	1) "name"
+	2) "zhuning"
+	3) "age"
+	4) "27"
+	127.0.0.1:6379> hsetnx hashkey name zhangsan
+	(integer) 0
+	127.0.0.1:6379> hgetall hashkey
+	1) "name"
+	2) "zhuning"
+	3) "age"
+	4) "27"
+	127.0.0.1:6379> hsetnx hashkey city beijing
+	(integer) 1
+	127.0.0.1:6379> hgetall hashkey
+	1) "name"
+	2) "zhuning"
+	3) "age"
+	4) "27"
+	5) "city"
+	6) "beijing"
+
+14. HSTRLEN key field
+	获取hash中filed字段的value的长度(String类型的)
+
+	返回值：
+	返回hash中filed字段的长度，如果filed字段不存在，则返回0
+
+	例子：
+	127.0.0.1:6379> hgetall hashkey
+	1) "name"
+	2) "zhuning"
+	3) "age"
+	4) "27"
+	5) "city"
+	6) "beijing"
+	127.0.0.1:6379> hstrlen hashkey name
+	(integer) 7
+
+15. HVALS key
+	获取hash中所有field的value值
+
+	返回值:
+	返回所有的value
+
+	例子：
+	127.0.0.1:6379> hgetall hashkey
+	1) "name"
+	2) "zhuning"
+	3) "age"
+	4) "27"
+	5) "city"
+	6) "beijing"
+	127.0.0.1:6379> hvals hashkey
+	1) "zhuning"
+	2) "27"
+	3) "beijing"
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,429 @@
+Sorted set(有序集合)
+
+1. ZADD key [NX|XX] [CH] [INCR] score member [score member ...]
+	添加指定的元素和分数到有序集合中，如果集合中已经存在某个元素，则更新分数。
+	如果key不存在，则创建有序集合并插入指定元素和分数。如果key对应的value不是有序集合则返回error
+	XX 仅更新已经存在的元素，不添加元素。
+	NX 不更新元素，仅添加元素
+	CH 修改返回值为发生变化的总数。
+	INCR 当指定该选项时，队成员的分数进行递增操作
+	SCORE 为双精度64位浮点数 
+	相同分数的元素根据字典顺序排序
+
+	返回值：
+	添加到集合中的成员的数量，不包含已经存在更新分数的成员，
+	如果指定INCR参数，则返回值变为ok等
+	成员的新分数
+
+	例子：
+	127.0.0.1:6379> zadd zaddkey NX  10 mongo 20 redis
+	(integer) 2
+
+	127.0.0.1:6379> zrange zaddkey 0 100 withscores
+	1) "mongo"
+	2) "10"
+	3) "redis"
+	4) "20"
+
+2. ZCARD key
+	获取存储在key中的有序集合的中元素的数量
+
+	返回值
+	返回存储在有序集合中元素的数量，如果key不存在，则返回0
+
+	例子：
+	127.0.0.1:6379> zrange zaddkey 0 100 withscores
+	1) "mongo"
+	2) "10"
+	3) "redis"
+	4) "20"
+	127.0.0.1:6379> zcard zaddkey
+	(integer) 2
+
+3. 	ZCOUNT key min max
+	获取有序集合中指定分数范围内的元素的个数
+
+	返回值：
+	返回元素的个数
+
+	例子：
+	127.0.0.1:6379> zrange zaddkey 0 100 withscores
+	1) "mongo"
+	2) "10"
+	3) "redis"
+	4) "20"
+	127.0.0.1:6379> zcount zaddkey 0 10
+	(integer) 1
+
+4.  ZINCRBY key increment member
+	对存在在key的集合中的member元素做 increment的运算；如果key不存在，则新建一个member，初始化值为0 做increment运算
+	这个grade必须是number类型的字符串
+
+	返回值：
+	返回为字符串形式的运算后的float值
+
+	例子：
+	127.0.0.1:6379> zrange zaddkey 0 100 withscores
+	1) "mongo"
+	2) "10"
+	3) "redis"
+	4) "20"
+	127.0.0.1:6379> zincrby zaddkey 3 mongo
+	"13"
+	127.0.0.1:6379> zrange zaddkey 0 100 withscores
+	1) "mongo"
+	2) "13"
+	3) "redis"
+	4) "20"
+
+5. ZINTERSTORE destination numkeys key [key ...] [WEIGHTS weight [weight ...]] [AGGREGATE SUM|MIN|MAX]
+	求指定个数的key的交集放到destination集合中，必须给key的个数，默认的是结果中的元素是有序集合中该元素分数之和。
+	如果destination集合中元素存在，则覆盖。
+
+	返回值：
+	有序集合destination中元素的个数。
+
+	例子：
+	127.0.0.1:6379> zrange zaddkey2 0 -1 withscores
+	1) "aa"
+	2) "2"
+	3) "mongo"
+	4) "10"
+	127.0.0.1:6379> zrange zaddkey 0 -1 withscores
+	1) "mongo"
+	2) "13"
+	3) "redis"
+	4) "20"
+	127.0.0.1:6379> zinterstore deskey 2 zaddkey zaddkey2 weights 2 1
+	(integer) 1
+	127.0.0.1:6379> zrange deskey 0 -1 withscores
+	1) "mongo"
+	2) "36"
+
+6. ZLEXCOUNT key min max
+	返回指定有序集合中 小分数元素和大分数元素之间的个数 如果是元素则以[分数小元素 [分数大元素   -和+最大和最小
+
+	返回值：
+	返回元素的个数
+
+	例子：
+	127.0.0.1:6379> zlexcount zaddkey - +
+	(integer) 2
+	127.0.0.1:6379> zlexcount zaddkey [mongo [redis
+	(integer) 2
+	127.0.0.1:6379> zrange zaddkey  0 -1 withscores
+	1) "mongo"
+	2) "13"
+	3) "redis"
+	4) "20"
+
+7. ZRANGE key start stop [withscores]
+	返回执行下标的存储在key的有序集合中元素，withscores参数 表示返回值中带分数
+
+	返回值：
+	返回执行下标范围内的元素 ，如果带 withscores参数 则返回结果中为分数和元素
+
+	例子：
+	127.0.0.1:6379> zrange zaddkey  0 -1 withscores
+	1) "mongo"
+	2) "13"
+	3) "redis"
+	4) "20"
+
+8. ZRANGEBYLEX key min max [LIMIT offset count]
+	返回指定成员区间内的成员，按成员字典正序排序，分数必须相同。（分数不同排序不准）
+	min和max可使用- +代替，[成员  如果有limit字段，则必须有offset和count字段代表分页的参数
+
+	返回值：
+	返回成员范围的元素列表
+
+	例子：
+	127.0.0.1:6379> zadd zsetkey 0 a 0 b 0 d 0 c 0 h 0 f
+	(integer) 6
+	127.0.0.1:6379> zrangebylex zsetkey - + 
+	1) "a"
+	2) "b"
+	3) "c"
+	4) "d"
+	5) "f"
+	6) "h"
+
+9. ZRANGEBYSCORE key min max [WITHSCORES] [LIMIT offset count]
+	返回指定分数范围间的元素 withscores表示带分数 limit表示分页 
+	0 -1可以代替 min和max  
+
+	返回值：
+	返回指定分数范围的元素列表
+
+	例子：
+	127.0.0.1:6379> zrange zaddkey 0 -1 withscores
+	1) "mysl"
+	2) "5"
+	3) "mongo"
+	4) "13"
+	5) "redis"
+	6) "20"
+	127.0.0.1:6379> zrangebyscore zaddkey 5 15 withscores
+	1) "mysl"
+	2) "5"
+	3) "mongo"
+	4) "13"
+	127.0.0.1:6379> zrangebyscore zaddkey 5 (13 withscores
+	1) "mysl"
+	2) "5"
+
+10. ZRANK key member
+	获取key集合中member的排名（分数从低到高的排名）
+
+	返回值：
+	返回这个元素的排名，不过元素不存则返回nil
+
+	例子：
+	127.0.0.1:6379> zrange zaddkey 0 -1 withscores
+	1) "mysl"
+	2) "5"
+	3) "mongo"
+	4) "13"
+	5) "redis"
+	6) "20"
+	127.0.0.1:6379> zrank zaddkey mongo
+	(integer) 1
+	127.0.0.1:6379> zrank zaddkey mysl
+	(integer) 0
+
+11. ZREM key member [member ...]
+	移除指定key中的member元素，如果member在集合中不存在，则忽略。
+
+	返回值：
+	返回被移除元素的个数，不包括被忽略的元素。
+
+	例子：
+	127.0.0.1:6379> zrange zaddkey 0 -1 withscores
+	1) "mysl"
+	2) "5"
+	3) "mongo"
+	4) "13"
+	5) "redis"
+	6) "20"
+	127.0.0.1:6379> zrem zaddkey mysl
+	(integer) 1
+	127.0.0.1:6379> zrange zaddkey 0 -1 withscores
+	1) "mongo"
+	2) "13"
+	3) "redis"
+	4) "20"
+
+12. ZREMRANGEBYLEX key min max 
+	当被插入的元素是相同的分数，删除指定元素之间的元素
+
+	返回值：
+	返回被删除元素的个数
+
+	例子：
+	127.0.0.1:6379> zrange zaddkey 0 -1
+	1) "a"
+	2) "b"
+	3) "d"
+	4) "f"
+	127.0.0.1:6379> zremrangebylex zaddkey [b [d
+	(integer) 2
+	127.0.0.1:6379> zrange zaddkey 0 -1
+	1) "a"
+	2) "f"
+
+13. ZREMRANGEBYRANK key start stop
+	删除指定排名之间的元素 （排名是分数从低到高排列，-1代表最后一个元素）
+
+	返回值：
+	返回删除元素的个数
+
+	例子：
+	127.0.0.1:6379> zadd zaddkey 1 a 2 b 3 c 4 d
+	(integer) 4
+	127.0.0.1:6379> zremrangebyrank zaddkey 1 2
+	(integer) 2
+	127.0.0.1:6379> zrange zaddkey 0 -1
+	1) "a"
+	2) "d"
+
+14. ZREMRANGEBYSCORE key min max
+	删除指定分数之间的元素 
+
+	返回值：
+	返回删除元素的个数
+
+	例子：
+	127.0.0.1:6379> zrange zaddkey 0 -1 withscores
+	 1) "b"
+	 2) "1"
+	 3) "c"
+	 4) "2"
+	 5) "d"
+	 6) "4"
+	 7) "f"
+	 8) "4"
+	 9) "k"
+	10) "9"
+	127.0.0.1:6379> zremrangebyscore zaddkey 2 4
+	(integer) 3
+	127.0.0.1:6379> zrange zaddkey 0 -1 withscores
+	1) "b"
+	2) "1"
+	3) "k"
+	4) "9"
+
+15. ZREVRANGE key start stop [withscores]
+	返回key集合中start至stop位置的 集合（逆序、分数从高到底排列）
+
+	返回值：
+	返回指定集合的列表
+
+	例子：
+	127.0.0.1:6379> zrange zaddkey 0 -1 withscores
+	 1) "b"
+	 2) "1"
+	 3) "c"
+	 4) "4"
+	 5) "f"
+	 6) "5"
+	 7) "g"
+	 8) "6"
+	 9) "k"
+	10) "9"
+	127.0.0.1:6379> zrevrange zaddkey 0 -1 withscores
+	 1) "k"
+	 2) "9"
+	 3) "g"
+	 4) "6"
+	 5) "f"
+	 6) "5"
+	 7) "c"
+	 8) "4"
+	 9) "b"
+	10) "1"
+
+16. ZREVRANGEBYLEX key max min [LIMIT offset count]
+	返回在 字典排序在max和min之间的 分数从高到低的集合 [排名高的元素 [排名低的元素 分数必须相同
+
+	返回值：
+	返回范围的元素列表
+
+	例子：
+	127.0.0.1:6379> zrevrange zaddkey 0 -1 withscores
+	 1) "k"
+	 2) "9"
+	 3) "g"
+	 4) "6"
+	 5) "f"
+	 6) "5"
+	 7) "c"
+	 8) "4"
+	 9) "b"
+	10) "1"
+	127.0.0.1:6379> zrevrangebylex zaddkey [c [g 
+	(empty list or set)
+	127.0.0.1:6379> zrevrangebylex zaddkey [g [c 
+	1) "g"
+	2) "f"
+	3) "c"
+
+17. ZREVRANGEBYSCORE key max min [WITHSCORES] [LIMIT offset count]
+	返回分数范围在max和min中间的集合 具有相同分数的元素以字典排序 逆序返回
+
+	返回值：
+	返回指定范围的元素列表
+
+	例子：
+	127.0.0.1:6379> zrevrange zaddkey 0 -1 withscores
+	 1) "k"
+	 2) "9"
+	 3) "g"
+	 4) "6"
+	 5) "f"
+	 6) "5"
+	 7) "c"
+	 8) "4"
+	 9) "b"
+	10) "1"
+	127.0.0.1:6379> zrevrangebyscore zaddkey 6 4
+	1) "g"
+	2) "f"
+	3) "c"
+
+18. ZREVRANK key member
+	从高到底排序 排名是0的是最高分的，返回key集合中member的排名
+
+	返回值：
+	返回member的排名，如果member或者key不存在，则返回nil
+
+	例子：
+	127.0.0.1:6379> zrange zaddkey 0 -1 withscores
+	 1) "b"
+	 2) "1"
+	 3) "c"
+	 4) "4"
+	 5) "f"
+	 6) "5"
+	 7) "g"
+	 8) "6"
+	 9) "k"
+	10) "9"
+	127.0.0.1:6379> zrevrank zaddkey b
+	(integer) 4	
+19. ZSCAN key cursor [MATCH pattern] [COUNT count]
+
+
+20. ZSCORE key member
+	获取指定member的分数
+
+	返回值：
+	返回指定member的分数，如果key或者members不存在，则返回nil
+
+	例子：
+	127.0.0.1:6379> zrange zaddkey 0 -1 withscores
+	 1) "b"
+	 2) "1"
+	 3) "c"
+	 4) "4"
+	 5) "f"
+	 6) "5"
+	 7) "g"
+	 8) "6"
+	 9) "k"
+	10) "9"
+	127.0.0.1:6379> zscore zaddkey c
+	"4"
+	127.0.0.1:6379> zscore zaddkey chen
+	(nil)
+
+21. ZUNIONSTORE destination numkeys key [key ...] [WEIGHTS weight [weight ...]] [AGGREGATE SUM|MIN|MAX]
+	求指定个数的key的并集放到destination集合中，必须给key的个数，默认的是结果中的元素是有序集合中该元素分数之和。
+	如果destination集合中元素存在，则覆盖。
+
+	返回值：
+	返回存储在destination集合中的元素的个数
+
+	例子：
+	127.0.0.1:6379> zrange zaddkey 0 -1 withscores
+	1) "a"
+	2) "1"
+	3) "b"
+	4) "2"
+	5) "c"
+	6) "3"
+	127.0.0.1:6379> zrange zaddkey2 0 -1 withscores
+	1) "a"
+	2) "4"
+	3) "b"
+	4) "4"
+	5) "d"
+	6) "5"
+	127.0.0.1:6379> zunionstore destinationkey 2 zaddkey zaddkey2 
+	(integer) 4
+	127.0.0.1:6379> zrange destinatonkey 0 -1
+	(empty list or set)
+	127.0.0.1:6379> zrange destinationkey 0 -1
+	1) "c"
+	2) "a"
+	3) "d"
+	4) "b"

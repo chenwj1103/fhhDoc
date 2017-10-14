@@ -1,0 +1,358 @@
+List：（LinkList 因为对redis来说。插入元素比查询元素更重要、size：2的32次方-1，value本质上是字符串）
+1. BLPOP key [key ...] timeout
+   它是LPOP的的阻塞版本。当list中没有元素可以弹出的时候将被堵塞，当有多个key的时候，它会依次检查弹出一个非空的list的头元素和key
+   当所有的可以都是空或者不存的情况下，BLPOP将阻塞连接，直到有客户端执行lpush或者Rpush命令。或者达到设置的超时时间
+
+   返回值：
+   key和 value  或者等待（timeout=0） 或者到达超时时间返回nil
+
+   例子：
+    127.0.0.1:6379> exists listkey
+	(integer) 0
+	127.0.0.1:6379> blpop listkey 0
+
+
+	127.0.0.1:6379> lpush listkey 1 2 3 4 5
+	(integer) 5
+	127.0.0.1:6379> blpop listkey 0
+	1) "listkey"
+	2) "5"
+	127.0.0.1:6379> brpop listkey 0
+	1) "listkey"
+	2) "1"
+
+	127.0.0.1:6379> brpop listkey2 5
+	(nil)
+	(5.09s)
+
+2. BRPOP key [key ...] timeout
+   它是RPOP的阻塞版，同BLPOP 
+
+   返回值
+   key和 value  或者等待（timeout=0） 或者到达超时时间返回nil
+
+   例子：
+    127.0.0.1:6379> lrange listkey 0 -1
+	1) "4"
+	2) "3"
+	3) "2"
+    
+    127.0.0.1:6379> brpop listkey 0
+	1) "listkey"
+	2) "2"
+
+3. BRPOPLPUSH source destination timeout
+   原子性的从source中移除最后一个元素，病存到destination中的第一个元素
+
+   返回值：
+   返回被移动的那个元素，当source不存在的时候返回客户端被阻塞 直到超时
+
+   例子：
+    127.0.0.1:6379> lrange listkey 0 -1
+	1) "4"
+	2) "3"
+	127.0.0.1:6379> brpoplpush listkey listkey2 10
+	"3"
+	127.0.0.1:6379> lrange listkey 0 -1
+	1) "4"
+	127.0.0.1:6379> lrange listkey2 0 -1
+	1) "3"
+    
+    127.0.0.1:6379> brpoplpush listkey3 listkey 5
+	(nil)
+	(5.02s)
+
+4. LINDEX key index
+   返回list的index位置的元素，下标从0开始 -1代表最后一个元素
+
+   返回值：
+   正常返回请求返回对应的元素，当index超出范围时返回nil，当type不是list时返回error
+
+   例子：
+
+    127.0.0.1:6379> lrange listkey 0 -1
+	1) "5"
+	2) "4"
+	3) "3"
+	4) "2"
+	5) "1"
+	6) "0"
+	7) "22"
+	127.0.0.1:6379> lindex listkey 3
+	"2"
+	127.0.0.1:6379> lindex listkey 10
+    (nil)
+
+5. LINSERT key BEFORE|AFTER pivot value
+   在基准值pivot前或者后插入value值
+
+   返回值：
+   返回插入操作后的list的长度，找不到基准值时返回-1
+
+   例子：
+	127.0.0.1:6379> linsert listkey before 3 100
+	(integer) 8
+	127.0.0.1:6379> lrange listkey 0 -1
+	1) "5"
+	2) "4"
+	3) "100"
+	4) "3"
+	5) "2"
+	6) "1"
+	7) "0"
+	8) "22"
+
+6. LLEN key
+	获取key对应list的长度 
+
+	返回值：
+	正常返回list的长度，当key不存在时返回0，当key对应的value的值不是list时返回error
+
+	例子：
+	127.0.0.1:6379> lrange listkey 0 -1
+	1) "5"
+	2) "4"
+	3) "100"
+	4) "3"
+	5) "2"
+	6) "1"
+	7) "0"
+	8) "22"
+	127.0.0.1:6379> llen listkey
+	(integer) 8
+	127.0.0.1:6379> llen listkey5
+	(integer) 0
+
+7. LPOP key
+ 	移除第一个元素 
+
+ 	返回值：
+ 	返回被移除的元素 如果key不存在则返回nil
+
+ 	例子：
+ 	127.0.0.1:6379> lrange listkey 0 -1
+	1) "5"
+	2) "4"
+	3) "100"
+	4) "3"
+	5) "2"
+	6) "1"
+	7) "0"
+	8) "22"
+	127.0.0.1:6379> lpop listkey
+	"5"
+	127.0.0.1:6379> lpop listkey5
+	(nil)
+
+8. LPUSH key value [value ...]
+	将指定的value从左至右依次插入到list的头部，如果key不存在，则创建一个空list，然后插入。如果type of key不是list，则返回error
+
+	返回值：
+    插入元素后list的长度。
+
+    例子：
+    127.0.0.1:6379> lrange listkey 0 -1
+	1) "4"
+	2) "100"
+	3) "3"
+	4) "2"
+	5) "1"
+	6) "0"
+	7) "22"
+	127.0.0.1:6379> lpush listkey 11 22 33 44 55
+	(integer) 12
+	127.0.0.1:6379> lrange listkey 0 -1
+	 1) "55"
+	 2) "44"
+	 3) "33"
+	 4) "22"
+	 5) "11"
+	 6) "4"
+	 7) "100"
+	 8) "3"
+	 9) "2"
+	10) "1"
+	11) "0"
+	12) "22"
+
+9. LPUSHX　key value
+	当key存在的时候切且key的类型是一个list的时候，在头部插入一个元素value ；当可以不存在的时候不执行任何操作
+
+	返回值：
+	返回操作后list的长度
+
+	例子：
+	127.0.0.1:6379> exists listkey4
+	(integer) 0
+	127.0.0.1:6379> lpushx listkey4 3
+	(integer) 0
+	127.0.0.1:6379> lrange listkey4 0 -1
+	(empty list or set)
+
+10. LRANGE key start stop
+    返回list的在下标位置的元素，如果start超过list的长度则返回 empty。
+
+    返回值：
+    返回list的元素集合，或者null
+
+    例子：
+     127.0.0.1:6379> lrange listkey 0 -1
+	 1) "55"
+	 2) "44"
+	 3) "33"
+	 4) "22"
+	 5) "11"
+	 6) "4"
+	 7) "100"
+	 8) "3"
+	 9) "2"
+	10) "1"
+	11) "0"
+	12) "22"
+	127.0.0.1:6379> lrange listkey 100 -1
+	(empty list or set)
+
+11. LREM key count value
+	移除前count次出现value的元素 count>0 从头开始算起 count<0从尾部开始算起  count=0 移除全部的value的元素
+
+	返回值：
+	返回被移除元素的个数
+
+	例子：
+	127.0.0.1:6379> lrange listkey 0 -1
+	1) "0"
+	2) "0"
+	3) "0"
+	4) "2"
+	5) "2"
+	6) "0"
+	7) "0"
+	8) "0"
+	127.0.0.1:6379> lrem listkey 2 0
+	(integer) 2
+	127.0.0.1:6379> lrange listkey 0 -1
+	1) "0"
+	2) "2"
+	3) "2"
+	4) "0"
+	5) "0"
+	6) "0"
+	127.0.0.1:6379> lrem listkey -2 0
+	(integer) 2
+	127.0.0.1:6379> lrange listkey 0 -1
+	1) "0"
+	2) "2"
+	3) "2"
+	4) "0"
+
+12. LSET key index value
+	设置index位置的值为value
+
+	返回值：
+	如果index越界，返回错误。如果设置正常，则返回ok
+
+	例子：
+	127.0.0.1:6379> lrange listkey 0 -1
+	1) "2"
+	2) "2"
+	127.0.0.1:6379> lset listkey 0 1
+	OK
+	127.0.0.1:6379> lrange listkey 0 -1
+	1) "1"
+	2) "2"
+	27.0.0.1:6379> lset listkey 10 2
+	(error) ERR index out of range
+
+13.LTRIM key start stop
+	修剪list的元素 当key不存在或者start大于list的长度时返回截取的list为空
+
+	返回值：
+	ok
+
+	例子：
+	127.0.0.1:6379> lrange listkey 0 -1
+	1) "1"
+	2) "2"
+	3) "3"
+	4) "4"
+	5) "5"
+	127.0.0.1:6379> ltrim listkey 0 3
+	OK
+	127.0.0.1:6379> lrange listkey 0 -1
+	1) "1"
+	2) "2"
+	3) "3"
+	4) "4"
+	127.0.0.1:6379> ltrim listkey 5 6
+	OK
+	127.0.0.1:6379> lrange listkey 0 -1
+	(empty list or set)	
+
+14. RPOP key
+	移除并返回list的最后一个元素 ,不存在的key返回nil
+
+	返回值：
+	返回移除的元素
+
+	例子：
+	127.0.0.1:6379> lrange listkey 0 -1
+	1) "4"
+	2) "2"
+	3) "0"
+	127.0.0.1:6379> rpop listkey
+	"0"
+	127.0.0.1:6379> lrange listkey 0 -1
+	1) "4"
+	2) "2"
+
+	127.0.0.1:6379> rpop listkey11
+	(nil)
+
+15. RPOPLPUSH source destination
+ 	从source的尾部移除元素并从放到destination头部，如果source为空则返回nil
+ 	正常情况下返回被移除的元素
+
+ 	返回值：
+ 	返回被移除的元素，当source为空的情况下返回nil
+
+ 	例子：
+ 	127.0.0.1:6379> lrange listkey 0 -1
+	1) "4"
+	2) "2"
+	127.0.0.1:6379> rpoplpush listkey listkey5
+	"2"
+
+16.RPUSH key value [value ...]
+	将value放到list的尾部，返回操作后list的长度，如果key不存在，则初始化一个list，将value放到list中。如果key中存的数据类型不是list，则返回error
+
+	返回值：
+	返回操作后list的长度
+
+	例子：
+	127.0.0.1:6379> lrange listkey 0 -1
+	1) "4"
+	127.0.0.1:6379> rpush listkey 3 4 5 6
+	(integer) 5
+	127.0.0.1:6379> lrange listkey 0 -1
+	1) "4"
+	2) "3"
+	3) "4"
+	4) "5"
+	5) "6"
+
+17. RPUSHX key value
+	 如果key存在且存储的类型是list，则value存到list的尾部，如果不存在则不执行任何操作。
+
+	 返回值：
+	 返回执行操作后的list的长度
+
+	 例子：
+	 127.0.0.1:6379> exists listkey6
+	(integer) 0
+	127.0.0.1:6379> rpushx listkey6 0
+	(integer) 0
+	127.0.0.1:6379> lrange listkey6 0 -1
+	(empty list or set)
+
+
+

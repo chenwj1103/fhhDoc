@@ -1,0 +1,6 @@
+db.runCommand({enableSharding: "fhh_test"})
+db.runCommand({shardCollection: "fhh_test.article", key: { "weMediaId" : 1, "createTime" : 1 }})
+db.runCommand({shardCollection: "fhh_test.video", key: { "weMediaId" : 1, "createTime" : 1 }})
+db.runCommand({enableSharding: "fhh_test1"})
+db.runCommand({shardCollection: "fhh_test1.article", key: { "weMediaId" : 1, "createTime" : 1 }})
+db.runCommand({shardCollection: "fhh_test1.video", key: { "weMediaId" : 1, "createTime" : 1 }})

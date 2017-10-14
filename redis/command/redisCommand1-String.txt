@@ -1,0 +1,398 @@
+String（字符串类型、二进制安全的、size：512M）
+1. APPEND key value
+   如果key存在且类型是字符串，则在字符串的末尾append这个value；
+   如果不存在，则创建并设值为value，此时类似于set
+   
+   返回值：返回添加字符串的长度
+   例子：
+  127.0.0.1:6379> exists mykey
+  (integer) 0
+  127.0.0.1:6379> append mykey 'hello'
+  (integer) 5
+  127.0.0.1:6379> append mykey ' world'
+  (integer) 11
+  127.0.0.1:6379> get mykey
+  "hello world"
+
+2. BITCOUNT key [start end]
+   统计字符串(二进制)被设置为1的bit数.start 和 end 参数的设置 -1 表示最后一个位，而 -2 表示倒数第二个位
+
+   返回值：被设置为 1 的位的数量
+   
+   127.0.0.1:6379> set mykey test
+   OK
+   127.0.0.1:6379> bitcount mykey 0 0
+   (integer) 4
+   127.0.0.1:6379> bitcount mykey 1 1
+   (integer) 4
+   127.0.0.1:6379> bitcount mykey 2 2
+   (integer) 5
+   127.0.0.1:6379> bitcount mykey 0 3
+   (integer) 17
+
+3. BITFIELD key [GET type offset] [SET type offset value] [INCRBY type offset increment] 
+   [OVERFLOW   WRAP|SAT|FAIL]
+
+4. BITOP operation destkey key [key ...]
+        BITOP AND destkey srckey1 srckey2 srckey3 ... srckeyN
+        BITOP OR destkey srckey1 srckey2 srckey3 ... srckeyN
+        BITOP XOR destkey srckey1 srckey2 srckey3 ... srckeyN
+        BITOP NOT destkey srckey
+
+        redis> SETBIT bits-1 0 1        # bits-1 = 1001
+        (integer) 0
+        redis> SETBIT bits-1 3 1
+        (integer) 0
+        redis> SETBIT bits-2 0 1        # bits-2 = 1011
+        (integer) 0
+        redis> SETBIT bits-2 1 1
+        (integer) 0
+        redis> SETBIT bits-2 3 1
+        (integer) 0
+        redis> BITOP AND and-result bits-1 bits-2
+        (integer) 1
+        redis> GETBIT and-result 0      # and-result = 1001
+        (integer) 1
+        redis> GETBIT and-result 1
+        (integer) 0
+        redis> GETBIT and-result 2
+        (integer) 0
+        redis> GETBIT and-result 3
+        (integer) 1
+
+
+
+   Bit运算，BITOP 支持四种表达式运算: AND（交集）, OR（并集）, XOR（异或） 和NOT（取非）
+
+5. BITPOS key bit [start] [end]
+   返回设置为1或0的一个字符串中的第一个点的位置
+
+6. DECR key 
+   对key做减1操作，如果key不存在，则将key对应的value置为0 然后执行操作，如果key对应的value不是整数或不是能作为整数的类型，将返回一个错误。最大为64位有符号的整数
+
+   返回值：
+   返回value减1后的值
+
+   例子：
+   127.0.0.1:6379> set mykey 10
+   OK
+   127.0.0.1:6379> decr mykey
+   (integer) 9
+   127.0.0.1:6379> decr mykey
+   (integer) 8
+  
+   127.0.0.1:6379> exists mykey2
+   (integer) 0
+   127.0.0.1:6379> decr mykey2
+   (integer) -1
+   127.0.0.1:6379> decr mykey2
+   (integer) -2
+  
+   127.0.0.1:6379> set mykey "9.0"
+   OK
+   127.0.0.1:6379> decr mykey
+   (error) ERR value is not an integer or out of range
+
+7. DECRBY key decrement
+   对存储在key中的数字做减 decrement的操作。如果key不存在和类型不对的情况同DECR key的命令
+
+   返回值：
+   返回对key做减 decrement的值
+   
+   例子：
+   127.0.0.1:6379> get mykey2
+   "-2"
+   127.0.0.1:6379> Decrby mykey2 10
+   (integer) -12
+
+8. GET key
+   获取这个key下存储的value，如果key不存在，则返回nil，如果key下存储的value不是String类型的，则返回error
+
+   返回值：返回the value of key，如果不存在返回nil，或者error
+   
+   例子：
+   127.0.0.1:6379> get mykey3
+   (nil)
+   127.0.0.1:6379> get mykey
+   "9.0"
+
+9. GETBIT key offset
+   获取key的offset偏移量位置的bit值，如果offset超过key对应value的长度，则返回0 如果key对应的value不存在，则为空字符串，对应的bit也是0 。
+
+   返回值：
+   设置前存储在offset位置的bit的值
+   
+   例子：
+   127.0.0.1:6379> setbit mybit 0 1
+   (integer) 0
+   127.0.0.1:6379> setbit mybit 1 1
+   (integer) 0
+   127.0.0.1:6379> getbit mybit 1
+   (integer) 1
+   127.0.0.1:6379> getbit mybit 0
+   (integer) 1
+   127.0.0.1:6379> getbit mybit 100
+   (integer) 0
+
+10. GETRANGE key start end
+    获取存储在key中的字符串的start至end位置的字符串 -1代表最有一个字符串，-2代表倒数第二个字符
+
+    返回值：
+    返回获取的字符串
+
+    例子：
+    127.0.0.1:6379> set mykey "helloWorld"
+    OK
+	127.0.0.1:6379> get mykey
+	"helloWorld"
+	127.0.0.1:6379> getrange mykey 0 4
+	"hello"
+	127.0.0.1:6379> getrange mykey 0 -1
+	"helloWorld"
+
+11. GETSET key value
+    将key的值设置为value，并返回set之前key存储的值；当key存在且不是字符串则返回error
+
+    返回值
+    返回set之前key存储的值，或者key不存在时返回nil
+
+    例子：
+    127.0.0.1:6379> get mykey
+	"helloWorld"
+	127.0.0.1:6379> getset mykey "nihao"
+	"helloWorld"
+	127.0.0.1:6379> get mykey
+	"nihao"
+	127.0.0.1:6379> getset notexistkey "hello"
+	(nil)
+
+12. INCR key
+    对存在key中value值执行原子加1操作；如果key不存在，则会先将它置为0，再执行操作；如果存在key中的value的类型不正确（不是string类型的时候），或者不是可以当做整型的字符串，则返回error。这个字符串是被解析为包括符号位在内的64位的10进制的整数来处理的
+
+    返回值：
+    返回执行INCR操作之后值
+
+    例子：
+    127.0.0.1:6379> exists incrkey
+	(integer) 0
+	127.0.0.1:6379> incr incrkey
+	(integer) 1
+	127.0.0.1:6379> set incrkey "19"
+	OK
+	127.0.0.1:6379> incr incrkey
+	(integer) 20
+	127.0.0.1:6379> set mykey "hello"
+	OK
+	127.0.0.1:6379> incr mykey
+	(error) ERR value is not an integer or out of range
+
+13. INCRBY key increment
+    对存储在key位置的字符串作为整数并加increment操作；其它类似于INCR命令
+
+    返回值：
+    返回执行INCR操作之后的值
+
+    例子：
+    127.0.0.1:6379> set mykey "22"
+	OK
+	127.0.0.1:6379> incrby mykey 33
+	(integer) 55 
+
+14. INCRBYFLOAT key increment
+    类似于INCRBY key increment ,要求key中存储的value必须是一个字符串。
+
+    返回值：
+    返回执行INCR操作之后的值
+
+    例子：
+    127.0.0.1:6379> set mykey "22.2"
+	OK
+	127.0.0.1:6379> incrbyfloat mykey 0.2
+	"22.4"
+	127.0.0.1:6379> set mykey "hello"
+	OK
+	127.0.0.1:6379> incrbyfloat mykey 2.2
+	(error) ERR value is not a valid float
+
+15. MGET key [key ...]
+    返回这些key对应的value，如果key不存在则返回nil,所以该命令不会失败
+
+    返回值：
+    返回这些key对应的value组成的集合
+
+	例子：
+	127.0.0.1:6379> exists mykey
+	(integer) 1
+	127.0.0.1:6379> exists mykey2
+	(integer) 1
+	127.0.0.1:6379> exists key
+	(integer) 0
+	127.0.0.1:6379> mget mykey mykey2 key
+	1) "hello"
+	2) "-12"
+	3) (nil)
+
+16. MSET key value [key value ...]
+	设置这些key为对应的value。如果key存在值，则更新，如果不想覆盖，则使用MSETNX命令。该命令是原子操作，要么都执行，要不都不执行，所以该返回值总是ok
+
+	返回值：
+	总是ok，没有failed
+
+	例子：
+	127.0.0.1:6379> mget mykey mykey2 key
+	1) "hello"
+	2) "-12"
+	3) (nil)
+	127.0.0.1:6379> mset mykey world mykey2 nihao key haha
+	OK
+	127.0.0.1:6379> mget mykey mykey2 key
+	1) "world"
+	2) "nihao"
+	3) "haha"
+
+17. MSETNX key value [key value ...]
+    将value设置在对应的key上。只要有一个key是存在的，任何一个key的set操作都不会被执行。即要么都执行，要么不执行。该操作是原子操作
+
+    返回值：
+    1 所有的key都被set
+    0 所有的key都不被set
+
+    例子：
+    127.0.0.1:6379> msetnx mykey hello mykey2 redis 
+	(integer) 0
+	127.0.0.1:6379> msetnx mykey4 hello mykey5 world
+	(integer) 1
+	127.0.0.1:6379> mget mykey4 mykey5
+	1) "hello"
+	2) "world"
+
+18. SETEX key seconds value
+	该操作是设置key的value并设置超时时间以秒为单位
+
+	返回值 
+	ok 
+
+	例子：
+	127.0.0.1:6379> setex mykey 10 hello
+	OK
+	127.0.0.1:6379> ttl mykey
+	(integer) 7
+	127.0.0.1:6379> ttl mykey
+	(integer) 4
+
+19. PSETEX key milliseconds value
+    设置key	的value并设置超时时间 只不过超时时间是ms
+
+    返回值
+    ok
+
+    例子：
+    127.0.0.1:6379> psetex mykey 11000 world
+	OK
+	127.0.0.1:6379> ttl mykey
+	(integer) 4
+	127.0.0.1:6379> ttl mykey
+	(integer) 3
+	127.0.0.1:6379> ttl mykey
+	(integer) 2
+   
+20. SET key value [EX seconds] [PX milliseconds] [NX|XX]
+    设置key的值为value（字符串类型） 并且设置后忽略原先的类型和原来的超时时间被失效
+    EX 超时时间 s
+    PX 超时时间 ms
+    NX 不存在情况下设置
+    XX 存在的情况下设置
+
+    返回值
+    正常执行返回ok 如果加NX或者XX 没满足条件返回nil
+
+    例子：
+    127.0.0.1:6379> set mykey hello EX 10
+	OK
+	127.0.0.1:6379> ttl mykey
+	(integer) 5
+	127.0.0.1:6379> ttl mykey
+	(integer) 3
+
+	127.0.0.1:6379> exists mykey
+	(integer) 1
+	127.0.0.1:6379> get mykey
+	"world"
+	127.0.0.1:6379> set mykey hello NX
+	(nil)
+	127.0.0.1:6379> get mykey
+	"world"
+	 
+21. SETNX key value	
+    如果key不存在设置value（String类型的），如果key存在则操作不执行
+
+    返回值
+    1执行 0 没执行
+
+    例子：
+
+    127.0.0.1:6379> get mykey
+	(nil)
+	127.0.0.1:6379> setnx mykey hello
+	(integer) 1
+	127.0.0.1:6379> setnx mykey world
+	(integer) 0
+	127.0.0.1:6379> get mykey
+	"hello"
+
+22. STRLEN key
+    返回存储在key中的字符串的长度，如果key不存在则返回0，value是非字符串的则返回error
+
+    返回值： 
+    字符串长度 或error
+
+    例子：
+    127.0.0.1:6379> set mykey "hello world"
+	OK
+	127.0.0.1:6379> strlen mykey
+	(integer) 11
+	127.0.0.1:6379> strlen mykey10
+	(integer) 0
+
+23. SETRANGE key offset value
+    覆盖字符串的一部分，从指定的offset处开始。如果offset比key对应的字符串还长，则用0补齐。offset最大可以是2的29次方-1。
+
+    返回值：
+    修改后字符串的长度
+
+    例子：
+
+    127.0.0.1:6379> get mykey
+	"hello world"
+	127.0.0.1:6379> setrange mykey 6 redis
+	(integer) 11
+	127.0.0.1:6379> get mykey
+	"hello redis"
+
+24. SETBIT key offset value
+    设置或者清空key的value(字符串)在offset处的bit值 value要么是0 要么是1
+
+    返回值：
+    返回setbit之前的offset处的bit值
+
+    例子：
+    127.0.0.1:6379> setbit mykey 7 1
+	(integer) 0
+	127.0.0.1:6379> setbit mykey 7 0
+	(integer) 1
+	127.0.0.1:6379> setbit mykey 7 1
+	(integer) 0
+	127.0.0.1:6379> getbit mykey 7
+	(integer) 1
+	127.0.0.1:6379> get mykey
+	"\x01"
+    
+
+
+
+
+
+
+
+
+

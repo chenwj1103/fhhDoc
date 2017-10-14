@@ -1,0 +1,127 @@
+Elk install
+
+Last edited by 任学飞 5 months ago
+elk install
+
+https://www.elastic.co/guide/index.html
+install java 8
+
+5.x 需要最小 java8
+$ wget --no-cookie --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" https://edelivery.oracle.com/otn-pub/java/jdk/8u111-b14/jdk-8u111-linux-x64.tar.gz
+$ tar zxvf 
+$  sudo mv jdk1.8.0_111 /usr/share/
+# 下面要指定java路径
+add yum repo
+
+$ sudo rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch
+$ sudo vi /etc/yum.repos.d/elastic.repo
+    [elasticsearch-5.x]
+    name=Elasticsearch repository for 5.x packages
+    baseurl=https://artifacts.elastic.co/packages/5.x/yum
+    gpgcheck=1
+    gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
+    enabled=1
+    autorefresh=1
+    type=rpm-md    
+
+# 由于公司内部的源也有elasticsearch且版本很低且会优先安装，所以指定一下源比较好,在此之前要把优先disable掉
+$ /etc/yum/pluginconf.d/priorities.conf
+    enabled = 0
+$ yum repolist
+$ sudo yum update elasticsearch -- --enablerepo=elasticsearch-5.x
+# elasticsearch-5.x 是  yum repolist 列出的id
+elasticsearch
+
+$ sudo yum install elasticsearch
+# 开机启动
+$ sudo /sbin/chkconfig --add elasticsearch
+# 启动服务
+$ sudo service elasticsearch start
+
+# elasticsearch sys configure
+sudo vi /etc/sysconfig/elasticsearch
+JAVA_HOME=/usr/share/jdk1.8.0_111  # JAVA PATH
+MAX_LOCKED_MEMORY=unlimited  # 下面配置中使用 bootstrap.mlockall: true
+
+# configure file
+sudo mkdir -p /data/logs/elasticsearch
+sudo mkdir -p /data/data/elasticsearch
+sudo chown elasticsearch:elasticsearch /data/logs/elasticsearch
+sudo chown elasticsearch:elasticsearch /data/data/elasticsearch
+
+/etc/elasticsearch/elasticsearch.yml
+path.logs: /data/logs/elasticsearch
+path.data: /data/data/elasticsearch
+cluster.name: fhh-logging
+node.name: "fhh-logging-10.90.13.162"
+bootstrap.memory_lock: true
+network.host: 0.0.0.0
+Kibana
+
+$ sudo yum install kibana 
+
+$ sudo chkconfig --add kibana
+$ sudo service kibana start
+
+$ sudo vi /etc/kibana/kibana.yml
+server.host: "0.0.0.0"
+logstash
+
+$ sudo yum install logstash
+$ vi /etc/logstash/startup.options
+JAVACMD=/usr/share/jdk1.8.0_111/bin/java  # 不好用！！
+
+$ cd usr/share/logstash/bin
+$ sudo ./system-install
+# 生成的文件在  /etc/init/logstash.conf
+# 不知道为什么在 /etc/logstash/startup.options 指定的 JAVACMD 未生效,所以找个workaround
+#  /etc/init/logstash.conf 会自动加载 /etc/default/logstash 的环境配置
+$ sudo vi /etc/default/logstash
+JAVA_HOME=/usr/share/jdk1.8.0_111
+
+$ sudo mkdir -p /data/data/logstash
+$ sudo chown logstash:logstash /data/data/logstash
+$ sudo vi /etc/logstash/logstash.yml 
+path.data:  /data/data/logstash
+
+$ sudo initctl start logstash
+$ sudo initctl stop logstash
+
+
+$ vi /etc/logstash/conf.d/fhh.conf
+input {
+    beats {
+        port => 5044
+    }
+}
+
+output {
+    elasticsearch {
+        hosts => "localhost:9200"
+        manage_template => false
+        index => "%{[@metadata][beat]}-%{+YYYY.MM.dd}"
+        document_type => "%{[@metadata][type]}"
+    }
+}
+filebeat
+
+# 因为要安装在每一台机器上的，所以不用 yum 安装了
+$ curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-5.1.2-x86_64.rpm
+$ sudo rpm -vi filebeat-5.1.2-x86_64.rpm
+
+# cofigure
+$ sudo vi /etc/filebeat/filebeat.yml
+- input_type: log
+    paths:
+        - /data/logs/fhh-mgr/mgr-out-?.log
+        - /data/logs/fhh-mgr/mgr-out-??.log
+        - /data/logs/fhh-mgr/mgr-out-???.log
+    encoding: utf-8
+    ignore_older: 12h
+output.elasticsearch:
+    hosts: ["10.90.13.162:9200"]
+    index: "fhh-mgr-%{+yyyy.MM.dd}"
+
+
+# start
+sudo /etc/init.d/filebeat start

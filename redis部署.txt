@@ -1,0 +1,95 @@
+Redis cache
+
+Last edited by 任学飞 about a month ago
+测试环境
+
+服务器ip 10.21.7.23
+
+集群端口 7000、7001、7002
+
+Home目录 /home/qinfj/redis-custer
+
+redis实例数据及配置目录 /data/redisdata/7000-7002
+
+启动流程
+
+启动不同redis实例需要进入相应目录
+cd /data/redisdata/7000
+/home/qinfj/redis-custer/redis-server ./redis.conf &
+其他7001 7002 启动相同
+关闭实例
+
+使用 /home/qinfj/redis-cluster/redis-cli -p port -h host shutdown
+/home/qinfj/redis-cluster/redis-cli -p 7000 shutdown
+需要安装ruby redis才能正常使用 redis-trib.rb工具
+  sudo gem install redis
+生产环境
+
+IP	端口
+10.90.13.153	7000
+10.90.13.154	7000
+10.90.13.155	7000
+10.90.13.156	7000
+10.90.9.23	7000
+10.90.9.24	7000
+10.90.9.23-24 备份 10.90.13.153-156
+反抄袭生产环境
+
+IP	端口
+10.90.13.145	7000,7001
+10.90.13.146	7000,7001
+10.90.13.147	7000,7001
+10.90.13.148	7000,7001
+7001端口为slave节点
+10.90.13.148:7001 备份 10.90.13.147:7000
+10.90.13.147:7001 备份 10.90.13.146:7000
+10.90.13.146:7001 备份 10.90.13.145:7000
+10.90.13.145:7001 备份 10.90.13.148:7000
+redis 基本操作
+
+ $redis_home/redis-trib.rb check ip:port   //查看集群信息
+
+ $redis_home/redis-trib.rb info ip:port    //查看集群中master信息
+
+ $redis_home/redis-trib.rb add-node <options> newip:newport custerip:port    //添加新节点
+    options
+      --slave：设置该参数，则新节点以slave的角色加入集群
+      --master-id：这个参数需要设置了--slave才能生效，--master-id用来指定新节点的master节点。如果不设置该参数，则会随机为节点选择master节点。
+    例如
+      ~/redis-cluster/redis-trib.rb  add-node --slave --master-id 9f2b3b67c8dff40277d4b434cb51b5ee301de  10.90.13.xxx:7001 10.90.13.145:7000
+
+ $redis_home/redis-trib.rb reshard <options> host:port   //迁移slot到新的节点
+     host:port：这个是必传参数，用来从一个节点获取整个集群信息，相当于获取集群信息的入口。
+     options
+         --from <arg>：需要从哪些源节点上迁移slot，可从多个源节点完成迁移，以逗号隔开，传递的是节点的node id，还可以直接传递--from all，这样源节点就是集群的所有节点，不传递该参数的话，则会在迁移过程中提示用户输入。
+         --to <arg>：slot需要迁移的目的节点的node id，目的节点只能填写一个，不传递该参数的话，则会在迁移过程中提示用户输入。
+         --slots <arg>：需要迁移的slot数量，不传递该参数的话，则会在迁移过程中提示用户输入。
+         --yes：设置该参数，可以在打印执行reshard计划的时候，提示用户输入yes确认后再执行reshard。
+         --timeout <arg>：设置migrate命令的超时时间。
+         --pipeline <arg>：定义cluster getkeysinslot命令一次取出的key数量，不传的话使用默认值为10。
+
+    例如：
+       redis-trib.rb reshard --from all --to 9f2b3b67c8dff40277d4b434cb54db1b5ee301de --yes 10.90.13.145:7000
+注redis-trib.rb工具的 options 与 ip:port 之间有顺序关系，在处理是需要注意
+redis-trib.rb详细介绍：http://blog.csdn.net/huwei2003/article/details/50973967
+不宕机重启cluster所有节点
+
+假设有节点如下配置
+3 master 3 slave
+
+1. 首先,重启3台slave
+   redis-cli -p 7000 shutdown #修改成合适你的命令
+   重启
+   等待节点全部恢复正常.查看命令
+   redis-trib.rb info HOST:IP
+   redis-trib.rb check HOST:IP
+
+2. 在slave节点上执行命令 cluster failover,使slave成为master
+   redis-cli -p 7000 cluster failover
+   检查是否已经切换
+   redis-trib.rb check HOST:IP
+
+3. 在新的slave节点上重复步骤1
+关闭 THP
+
+https://docs.mongodb.com/manual/tutorial/transparent-huge-pages/

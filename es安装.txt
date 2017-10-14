@@ -1,0 +1,172 @@
+Elasticsearch
+
+Last edited by 覃复继 17 days ago
+yum方式安装elasticsearch
+
+安装文档https://www.elastic.co/guide/en/elasticsearch/reference/current/rpm.html
+#sudo vi /etc/yum.repos.d/elasticsearch.repo <<
+
+[elasticsearch-5.x]
+name=Elasticsearch repository for 5.x packages
+baseurl=https://artifacts.elastic.co/packages/5.x/yum
+gpgcheck=1
+gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
+enabled=1
+autorefresh=1
+type=rpm-md
+
+#sudo yum install elasticsearch
+#sudo chkconfig --add elasticsearch
+
+默认安装路径
+home 目录   /usr/share/elasticsearch
+配置文件
+  elasticsearch环境变量  /etc/sysconfig/elasticsearch         
+  elasticsearch集群      /etc/elasticsearch/elasticsearch.yml 
+  elasticsearch的jvm参数 /etc/elasticsearch/jvm.options       
+  elasticsearch日志参数  /etc/elasticsearch/log4j2.properties 
+配置es
+
+创建目录
+ #sudo mkdir -p /data/elasticsearch/data
+ #sudo mkdir -p /data/elasticsearch/logs
+ #调整目录用户
+ #sudo chown -R elasticsearch:elasticsearch /data/elasticsearch
+
+ 修改/etc/sysconfig/elasticsearch 以下项
+
+ #Elasticsearch configuration directory
+ CONF_DIR=/etc/elasticsearch
+ #Elasticsearch data directory
+ DATA_DIR=/data/elasticsearch/data
+ #Elasticsearch logs directory
+ LOG_DIR=/data/elasticsearch/logs
+ #Elasticsearch PID directory
+ PID_DIR=/data/elasticsearch
+ #Additional Java OPTS
+
+ 修改/etc/elasticsearch/jvm.options
+ -Xms12g -Xmx12g
+
+
+修改/etc/elasticsearch/elasticsearch.yml 以下配置项
+  #集群名
+  cluster.name: fhh
+  #节点名称。各个节点名要唯一
+  node.name: fhh-node-2
+  #数据文件位置
+  path.data: /data/elasticsearch/data
+  #日志文件地址
+  path.logs: /data/elasticsearch/logs
+  #绑定主机地址
+  network.host: 0.0.0.0
+  #http rest api 端口
+  http.port: 9210
+  #列表es节点
+  discovery.zen.ping.unicast.hosts: ["10.90.34.31", "10.90.34.32","10.90.34.33","10.90.34.34","10.90.34.35"]
+  #设置这个参数来保证集群中的节点可以知道其它N个有master资格的节点
+  discovery.zen.minimum_master_nodes: 3
+  #设置集群中N个节点启动时进行数据恢复
+  gateway.recover_after_nodes: 1
+  bootstrap.system_call_filter: false   # 针对 system call filters failed to install, 参见 https://www.elastic.co/guide/en/elasticsearch/reference/current/system-call-filter-check.html
+
+ 修改/etc/elasticsearch/log4j2.properties 以下配置项
+
+ 启动 es
+ #sudo -i service elasticsearch start
+查看服务是否启动
+#ps -ef | grep java 
+安装search search-guard-5 ,需要和es的版本相同，参考(https://github.com/floragunncom/search-guard/wiki)
+
+ 安装版本5.4.0-12  网络不好可以下载安装 
+ #sudo /usr/shard/elasticsearch/bin/elasticsearch-plugin install -b com.floragunn:search-guard-5:5.4.0-12
+ #sudo /usr/shard/elasticsearch/bin/elasticsearch-plugin install -b file:///file/to/path
+
+下载生成证书 工具
+ #wget https://github.com/floragunncom/search-guard-ssl/archive/5.4.0.zip
+ #unzip -o -d ./ 5.4.0.zip
+ #cd search-guard-ssl-5.4.0/example-pki-scripts
+
+ 创建批量证书工具，生成root证书，为各个几点生成证书，已经客户端管理证书
+
+ #sudo vi my.sh
+
+  #!/bin/bash
+  set -e
+  ./clean.sh
+  ./gen_root_ca.sh fhhcapass fhh12345678~
+  ./gen_node_cert.sh  fhh-el fhh12345678~ fhhcapass \
+  ./gen_client_node_cert.sh  fhhadmin fhh12345678~ fhhcapass
+   echo "Successful"
+
+  `注 为简单，各个节点使用相同的证书`
+
+   执行my.sh
+   #sudo chmod +x my.sh
+   #./my.sh
+
+   拷贝 node-fhh-el-keystore.jks fhhadmin-keystore.jks  truststore.jks 到es的配置目录
+   #sudo cp node-fhh-el-keystore.jks fhhadmin-keystore.jks  truststore.jks /etc/elasticsearch
+
+   修改/etc/elasticsearch/elasticsearch.yml , 增加以下配置
+   searchguard.ssl.transport.keystore_filepath: node-fhh-el-keystore.jks
+   searchguard.ssl.transport.keystore_password: fhh12345678~
+   searchguard.ssl.transport.truststore_filepath: truststore.jks
+   searchguard.ssl.transport.truststore_password: fhh12345678~
+   searchguard.ssl.transport.enforce_hostname_verification: false
+   #不强制使用 http ssl
+   #searchguard.ssl.http.enabled: false
+   #searchguard.ssl.http.keystore_filepath: node-fhh-el-keystore.jks
+   #searchguard.ssl.http.keystore_password: fhh12345678~
+   #searchguard.ssl.http.truststore_filepath: truststore.jks
+   #searchguard.ssl.http.truststore_password: fhh12345678~
+   searchguard.authcz.admin_dn:
+      - CN=fhhadmin,OU=client,O=client,L=Test,C=DE
+   http.cors.enabled: true
+   http.cors.allow-origin: "*"
+   http.cors.allow-headers: Authorization
+
+   启动el
+   #sudo service elasticsearch restart
+初始化用户 只需要在一台节点上安装，随后的节点能自动获取
+
+  使用 fhhadmin-keystore.jks truststore.jks 产生密码串创建内部用户（系统的访问用户）
+  #cd /usr/share/elasticsearch/plugins/search-guard-5/tools
+
+  创建用户
+  1、使用truststore.jks（根证书） fhhadmin-keystore.jks （用户证书）产生密码
+  2、将 truststore.jks fhhadmin-keystore.jks 文件拷贝到执行hash.js的目录,这里使用tools目录
+
+  #cp /etc/elasticsearch/fhhadmin-keystore.jks .
+  #cp /etc/elasticsearch/truststore.jks .
+  #./hash.sh -p fhhfhh
+      > $2a$12$pWaDkPahbneD.gMgfT.XGe8xtn8wc/G6evzF4FCEPCtJSil16pEYO
+
+  修改 /usr/share/elasticsearch/plugins/search-guard-5/sgconfig/sg_internal_users.yml 仅保留以下
+ admin:
+    hash: $2a$12$pWaDkPahbneD.gMgfT.XGe8xtn8wc/G6evzF4FCEPCtJSil16pEYO
+
+ 导入用户
+  #sudo /usr/share/elasticsearch/plugins/search-guard-5/tools/sgadmin.sh -cd /usr/share/elasticsearch/plugins/search-guard-5/sgconfig -cn fhh -ks /etc/elasticsearch/fhhadmin-keystore.jks -ts /etc/elasticsearch/truststore.jks -kspass fhh12345678~ -tspass fhh12345678~ -nhnv --diagnose 
+
+ 重启es
+ #service elasticsearch restart
+
+ 验证
+ curl -u admin:fhhfhh http://localhost:9210
+ 如果没有指定用户 Unauthorized
+客户端api
+
+https://floragunn.com/searchguard-elasicsearch-transport-clients/
+elasticsearch-head 集群管理工具
+
+http://fhhwh.staff.ifeng.com:9100/?auth_name=admin&auth_password=fhhfhh&base_uri=http://10.90.34.31:9210
+elasticsearch 管理命令
+
+1、出现unassigned shard错误 重新执行错误的shard执行
+   curl -XPOST 'http://admin:fhhfhh@127.0.0.1:9210/_cluster/reroute?retry_failed=true'
+   也可以使用 /_cluster/reroute 命令重新分配shard（不推荐），使用上面的命令系统会自动分配shard
+2、查看结群的shard分配情况
+   curl -XPOST 'http://admin:fhhfhGET 'http://admin:fhhfhh@127.0.0.1:9210/_cluster/allocation/explain?pretty'
+3、查看集群的节点状态
+   curl -XPOST 'http://admicurl -XGET 'http://admin:fhhfhh@127.0.0.1:9210/_cat/nodes'
