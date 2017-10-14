@@ -1,7 +1,0 @@
-http://fhhapi.ifeng.com/content/getContentDetail?id=13115565
-
-http://fhhapi.ifeng.com/content/getContentList?eAccountId=370804&pageNo=1&pageSize=2&type=article
-
-http://fhhapi.ifeng.com/content/accountDetail?type=1&id=2833,620075&weight=1
-
-http://fhhapi.ifeng.com/quota/queryArticleQuota/4190493,1,4,99/1
